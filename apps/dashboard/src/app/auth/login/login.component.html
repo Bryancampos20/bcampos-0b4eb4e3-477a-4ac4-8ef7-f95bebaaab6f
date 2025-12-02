@@ -1,0 +1,62 @@
+<div class="min-h-screen flex items-center justify-center bg-slate-900">
+  <div class="w-full max-w-md bg-slate-800 rounded-xl shadow-xl p-8 border border-slate-700">
+    <h1 class="text-2xl font-semibold text-white text-center mb-2">
+      Task Management
+    </h1>
+    <p class="text-sm text-slate-300 text-center mb-6">
+      Sign in with your provided credentials
+    </p>
+
+    <form (ngSubmit)="submit()" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-200 mb-1">
+          Email
+        </label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          required
+          class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          placeholder="owner@example.com"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-200 mb-1">
+          Password
+        </label>
+        <input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          required
+          class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          placeholder="••••••••"
+        />
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="isSubmitting"
+        class="w-full py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm transition"
+      >
+        {{ isSubmitting ? 'Signing in…' : 'Sign in' }}
+      </button>
+
+      <p
+        *ngIf="error"
+        class="text-sm text-red-400 text-center mt-2"
+      >
+        {{ error }}
+      </p>
+    </form>
+
+    <div class="mt-6 text-xs text-slate-400 text-center">
+      <p class="mb-1">Seed users for testing:</p>
+      <p>owner@example.com / password123</p>
+      <p>admin@example.com / password123</p>
+      <p>viewer@example.com / password123</p>
+    </div>
+  </div>
+</div>

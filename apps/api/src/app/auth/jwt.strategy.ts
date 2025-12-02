@@ -1,8 +1,11 @@
+// apps/api/src/app/auth/jwt.strategy.ts
+
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthUser } from '@shared/auth';
 import { Role } from '@shared/data';
+import { ConfigService } from '@nestjs/config';
 
 interface JwtPayload {
   sub: string;
@@ -13,12 +16,14 @@ interface JwtPayload {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      // 🔐 En prod, esto viene de env vars
-      secretOrKey: 'dev-secret',
+      // 🔐 Ahora usamos el mismo secreto definido en .env y usado por JwtModule
+      secretOrKey:
+        configService.get<string>('JWT_SECRET') ??
+        'dev-secret', // fallback por si acaso en dev
     });
   }
 

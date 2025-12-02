@@ -1,33 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { AuthUser } from '@shared/auth';
 import { Role } from '@shared/data';
-
-// 🔐 NOTA: Para el challenge usamos usuarios hardcodeados.
-// En algo real, esto vendría de la BD (User entity).
-const MOCK_USERS: (AuthUser & { password: string })[] = [
-  {
-    id: 'user-owner-1',
-    email: 'owner@example.com',
-    role: Role.OWNER,
-    organizationId: 'org-1',
-    password: 'password123',
-  },
-  {
-    id: 'user-admin-1',
-    email: 'admin@example.com',
-    role: Role.ADMIN,
-    organizationId: 'org-1',
-    password: 'password123',
-  },
-  {
-    id: 'user-viewer-1',
-    email: 'viewer@example.com',
-    role: Role.VIEWER,
-    organizationId: 'org-1',
-    password: 'password123',
-  },
-];
+import { User } from '../entities/user.entity';
 
 export interface LoginDto {
   email: string;
@@ -36,21 +13,30 @@ export interface LoginDto {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+  ) {}
 
-  private findUserByEmail(email: string): (AuthUser & { password: string }) | undefined {
-    return MOCK_USERS.find((u) => u.email === email);
+  private toAuthUser(entity: User): AuthUser {
+    return {
+      id: entity.id,
+      email: entity.email,
+      role: entity.role as Role,
+      organizationId: entity.organizationId,
+    };
   }
 
   async validateUser(email: string, password: string): Promise<AuthUser> {
-    const user = this.findUserByEmail(email);
+    const user = await this.userRepo.findOne({ where: { email } });
 
-    if (!user || user.password !== password) {
+    // En producción: comparar password hasheado (bcrypt).
+    if (!user || user.passwordHash !== password) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const { password: _pwd, ...sanitized } = user;
-    return sanitized;
+    return this.toAuthUser(user);
   }
 
   async login(dto: LoginDto): Promise<{ accessToken: string }> {
