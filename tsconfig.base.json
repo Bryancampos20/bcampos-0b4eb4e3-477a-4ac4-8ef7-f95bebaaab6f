@@ -15,13 +15,9 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@bcampos-0b4eb4e3-477a-4ac4-8ef7-f95bebaaab6f/auth": [
-        "libs/auth/src/index.ts"
-      ],
-      "@bcampos-0b4eb4e3-477a-4ac4-8ef7-f95bebaaab6f/data": [
-        "libs/data/src/index.ts"
-      ]
-    }
+      "@shared/auth": ["libs/auth/src/index.ts"],
+      "@shared/data": ["libs/data/src/index.ts"]
+    },
   },
   "exclude": ["node_modules", "tmp"]
 }
