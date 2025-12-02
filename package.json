@@ -1,0 +1,13 @@
+{
+  "name": "@bcampos-0b4eb4e3-477a-4ac4-8ef7-f95bebaaab6f/source",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {},
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {
+    "@nx/js": "16.10.0",
+    "@nx/workspace": "16.10.0",
+    "nx": "16.10.0"
+  }
+}
