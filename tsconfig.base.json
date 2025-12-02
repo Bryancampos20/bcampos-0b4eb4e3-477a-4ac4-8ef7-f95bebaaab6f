@@ -18,6 +18,7 @@
       "@shared/auth": ["libs/auth/src/index.ts"],
       "@shared/data": ["libs/data/src/index.ts"]
     },
+    "ignoreDeprecations": "6.0"
   },
   "exclude": ["node_modules", "tmp"]
 }

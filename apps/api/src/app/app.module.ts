@@ -6,6 +6,7 @@ import { Organization } from './entities/organization.entity';
 import { User } from './entities/user.entity';
 import { Task } from './entities/task.entity';
 import { TasksModule } from './tasks/tasks.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { TasksModule } from './tasks/tasks.module';
       entities: [Organization, User, Task],
       synchronize: true,
     }),
+    AuthModule,
     TasksModule,
   ],
   controllers: [AppController],
