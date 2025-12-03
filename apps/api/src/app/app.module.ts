@@ -15,7 +15,7 @@ import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,   // para usar process.env en todo lado
+      isGlobal: true,
       envFilePath: '.env',
     }),
     TypeOrmModule.forRoot({

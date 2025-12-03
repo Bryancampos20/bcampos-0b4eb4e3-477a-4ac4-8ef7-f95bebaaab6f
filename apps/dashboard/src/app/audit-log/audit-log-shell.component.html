@@ -1,0 +1,222 @@
+<div class="app-shell flex flex-col">
+  <!-- Top bar -->
+  <header class="app-header">
+    <div>
+      <h1 class="app-header-title">Audit Log</h1>
+      <p class="app-header-subtitle">
+        Organization-wide task activity history
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a routerLink="/tasks" class="app-button-ghost">
+        Back to tasks
+      </a>
+
+      <button
+        type="button"
+        (click)="toggleTheme()"
+        class="app-button-ghost text-xs"
+      >
+        <span class="mr-1" *ngIf="isDarkMode; else lightIcon">🌙</span>
+        <ng-template #lightIcon>☀️</ng-template>
+        {{ isDarkMode ? 'Dark' : 'Light' }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="flex-1 p-6">
+    <!-- VIEWER access -->
+    <div *ngIf="isViewer" class="max-w-3xl mx-auto">
+      <div
+        class="app-card app-card-padding border-amber-500/70 bg-amber-50/90 text-amber-900
+               dark:bg-slate-900 dark:border-amber-700/70 dark:text-amber-100 text-sm"
+      >
+        <p class="font-semibold mb-1">Access restricted</p>
+        <p>
+          Your role (<span class="font-mono">VIEWER</span>) is read-only and is
+          not allowed to access the audit log.
+        </p>
+      </div>
+    </div>
+
+    <!-- OWNER / ADMIN -->
+    <div *ngIf="!isViewer" class="max-w-5xl mx-auto space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-semibold">Organization Audit Log</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            All task-related activity within your organization.
+          </p>
+        </div>
+        <span class="text-xs text-slate-500 dark:text-slate-400">
+          {{ logs.length }} entr{{ logs.length === 1 ? 'y' : 'ies' }}
+        </span>
+      </div>
+
+      <div class="app-card app-card-padding">
+        <div *ngIf="loading" class="text-sm text-slate-500 dark:text-slate-400">
+          Loading audit log…
+        </div>
+
+        <div *ngIf="error" class="text-sm text-red-500 mb-4">
+          {{ error }}
+        </div>
+
+        <div
+          *ngIf="!loading && !error && logs.length === 0"
+          class="text-sm text-slate-500 dark:text-slate-400"
+        >
+          No audit log entries yet.
+        </div>
+
+        <div *ngIf="logs.length > 0" class="overflow-x-auto mt-2">
+          <table class="app-table text-xs align-top">
+            <thead>
+              <tr class="app-table-head-row">
+                <th class="app-table-head-cell">Timestamp</th>
+                <th class="app-table-head-cell">Action</th>
+                <th class="app-table-head-cell">User</th>
+                <th class="app-table-head-cell">Details</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let log of logs" class="app-table-row align-top">
+                <!-- Timestamp -->
+                <td class="app-table-cell whitespace-nowrap align-top">
+                  {{ log.createdAt | date: 'short' }}
+                </td>
+
+                <!-- Action -->
+                <td class="app-table-cell align-top">
+                  <span class="app-badge uppercase tracking-wide">
+                    {{ log.action }}
+                  </span>
+                </td>
+
+                <!-- User -->
+                <td class="app-table-cell align-top">
+                  <div
+                    class="text-[11px] font-medium text-slate-700 dark:text-slate-100"
+                  >
+                    {{ log.userEmail || 'Unknown user' }}
+                  </div>
+                </td>
+
+                <!-- Details -->
+                <td class="app-table-cell align-top">
+                  <!-- 1) Case: BEFORE / AFTER -->
+                  <ng-container
+                    *ngIf="hasBeforeAfter(log); else otherDetails"
+                  >
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <!-- BEFORE -->
+                      <div>
+                        <p
+                          class="text-[10px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1"
+                        >
+                          Before
+                        </p>
+                        <div
+                          class="text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-2
+                                 dark:bg-slate-950/80 dark:border-slate-800 space-y-0.5"
+                        >
+                          <p>
+                            <span class="font-semibold">Title:</span>
+                            {{ getBeforeTitle(log) }}
+                          </p>
+                          <p>
+                            <span class="font-semibold">Status:</span>
+                            {{ getBeforeStatus(log) }}
+                          </p>
+                          <p>
+                            <span class="font-semibold">Category:</span>
+                            {{ getBeforeCategory(log) }}
+                          </p>
+                          <p class="app-ellipsis">
+                            <span class="font-semibold">Description:</span>
+                            {{ getBeforeDescription(log) }}
+                          </p>
+                        </div>
+                      </div>
+
+                      <!-- AFTER -->
+                      <div>
+                        <p
+                          class="text-[10px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1"
+                        >
+                          After
+                        </p>
+                          <div
+                            class="text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-2
+                                   dark:bg-slate-950/80 dark:border-slate-800 space-y-0.5"
+                          >
+                            <p>
+                              <span class="font-semibold">Title:</span>
+                              {{ getAfterTitle(log) }}
+                            </p>
+                            <p>
+                              <span class="font-semibold">Status:</span>
+                              {{ getAfterStatus(log) }}
+                            </p>
+                            <p>
+                              <span class="font-semibold">Category:</span>
+                              {{ getAfterCategory(log) }}
+                            </p>
+                            <p class="app-ellipsis">
+                              <span class="font-semibold">Description:</span>
+                              {{ getAfterDescription(log) }}
+                            </p>
+                          </div>
+                      </div>
+                    </div>
+                  </ng-container>
+
+                  <!-- 2) Case: TASK_CREATED with flat snapshot -->
+                  <ng-template #otherDetails>
+                    <ng-container
+                      *ngIf="hasSnapshotDetails(log); else rawDetails"
+                    >
+                      <div
+                        class="text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-2
+                               dark:bg-slate-950/80 dark:border-slate-800 space-y-0.5"
+                      >
+                        <p>
+                          <span class="font-semibold">Title:</span>
+                          {{ getSnapshotTitle(log) }}
+                        </p>
+                        <p>
+                          <span class="font-semibold">Status:</span>
+                          {{ getSnapshotStatus(log) }}
+                        </p>
+                        <p>
+                          <span class="font-semibold">Category:</span>
+                          {{ getSnapshotCategory(log) }}
+                        </p>
+                        <p class="app-ellipsis">
+                          <span class="font-semibold">Description:</span>
+                          {{ getSnapshotDescription(log) }}
+                        </p>
+                      </div>
+                    </ng-container>
+
+                    <!-- 3) Fallback: any other raw JSON -->
+                    <ng-template #rawDetails>
+                      <pre
+                        class="text-[10px] leading-snug bg-slate-50 border border-slate-200 rounded-lg p-2 max-h-40 overflow-auto whitespace-pre-wrap
+                               dark:bg-slate-950/80 dark:border-slate-800"
+                      >
+{{ formatDetails(log) }}</pre>
+                    </ng-template>
+                  </ng-template>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

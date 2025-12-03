@@ -4,12 +4,10 @@ import { AppModule } from './app/app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Si ya usas prefijo global 'api', déjalo
   app.setGlobalPrefix('api');
 
-  // 👇 Habilitar CORS para el frontend
   app.enableCors({
-    origin: 'http://localhost:4200', // dashboard
+    origin: 'http://localhost:4200',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
   });

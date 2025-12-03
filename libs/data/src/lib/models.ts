@@ -4,8 +4,22 @@ export enum Role {
   VIEWER = 'VIEWER',
 }
 
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
-export type TaskCategory = 'WORK' | 'PERSONAL';
+// Ejemplo donde ya tienes Role, TaskStatus, etc.
+
+export enum TaskStatus {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  CODE_REVIEW = 'CODE_REVIEW',
+  DONE = 'DONE',
+}
+
+export enum TaskCategory {
+  CORE = 'CORE',
+  CUSTOM = 'CUSTOM',
+  QA = 'QA',
+  DEVOPS = 'DEVOPS',
+  DATA = 'DATA',
+}
 
 export interface Organization {
   id: string;

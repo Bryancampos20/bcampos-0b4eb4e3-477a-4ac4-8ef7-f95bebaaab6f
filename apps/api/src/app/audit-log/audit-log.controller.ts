@@ -7,8 +7,7 @@ import {
   RolesGuard,
 } from '@shared/auth';
 import { Role } from '@shared/data';
-import { AuditLogService } from './audit-log.service';
-import { AuditLog } from './audit-log.entity';
+import { AuditLogService, AuditLogWithUserEmail } from './audit-log.service';
 
 @Controller('audit-log')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -17,7 +16,9 @@ export class AuditLogController {
 
   @Get()
   @Roles(Role.OWNER, Role.ADMIN)
-  getOrgAuditLog(@CurrentUser() user: AuthUser): Promise<AuditLog[]> {
-    return this.auditLogService.findByOrganization(user.organizationId);
+  getOrgAuditLog(
+    @CurrentUser() user: AuthUser,
+  ): Promise<AuditLogWithUserEmail[]> {
+    return this.auditLogService.findByOrganization(user);
   }
 }

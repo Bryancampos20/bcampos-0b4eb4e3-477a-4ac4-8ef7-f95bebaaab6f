@@ -9,11 +9,16 @@ import { Task } from '../entities/task.entity';
 import { TasksService } from './tasks.service';
 import { AuditLogService } from '../audit-log/audit-log.service';
 import { AuthUser } from '@shared/auth';
-import { Role } from '@shared/data';
+import { Role, TaskCategory, TaskStatus } from '@shared/data';
+import { Organization } from '../entities/organization.entity';
+import { AuditAction } from '../audit-log/audit-log.entity';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
 describe('TasksService', () => {
   let tasksService: TasksService;
   let taskRepo: Repository<Task>;
+  let orgRepo: Repository<Organization>;
   let auditLogService: AuditLogService;
 
   const userOwner: AuthUser = {
@@ -45,6 +50,12 @@ describe('TasksService', () => {
           },
         },
         {
+          provide: getRepositoryToken(Organization),
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
+        {
           provide: AuditLogService,
           useValue: {
             logTaskAction: jest.fn(),
@@ -55,35 +66,46 @@ describe('TasksService', () => {
 
     tasksService = moduleRef.get(TasksService);
     taskRepo = moduleRef.get(getRepositoryToken(Task));
+    orgRepo = moduleRef.get(getRepositoryToken(Organization));
     auditLogService = moduleRef.get(AuditLogService);
   });
 
   describe('findAll', () => {
-    it('should filter tasks by organizationId', async () => {
+    it('should filter tasks by allowed organizationIds', async () => {
       (taskRepo.find as jest.Mock).mockResolvedValue([]);
+
+      (orgRepo.findOne as jest.Mock).mockResolvedValue({
+        id: userOwner.organizationId,
+        children: [],
+      });
 
       await tasksService.findAll(userOwner);
 
-      expect(taskRepo.find).toHaveBeenCalledWith({
-        where: { organizationId: 'org-1' },
-      });
+      expect(taskRepo.find).toHaveBeenCalledTimes(1);
+      const callArgs = (taskRepo.find as jest.Mock).mock.calls[0][0];
+
+      expect(callArgs.order).toEqual({ createdAt: 'DESC' });
+      expect(callArgs.where).toBeDefined();
+      expect(callArgs.where.organizationId).toBeDefined();
+      expect(callArgs.where.organizationId.value).toEqual(['org-1']);
     });
   });
 
   describe('create', () => {
     it('should create a task with ownerId and organizationId and log audit', async () => {
-      const dto = {
+      const dto: CreateTaskDto = {
         title: 'Test task',
         description: 'Desc',
-        category: 'WORK' as const,
+        category: TaskCategory.CORE,
+        status: TaskStatus.OPEN,
       };
 
       const createdTask: Task = {
         id: 'task-1',
         title: dto.title,
-        description: dto.description,
+        description: dto.description!,
         category: dto.category,
-        status: 'TODO',
+        status: dto.status ?? TaskStatus.OPEN,
         ownerId: userOwner.id,
         organizationId: userOwner.organizationId,
         owner: null,
@@ -101,7 +123,7 @@ describe('TasksService', () => {
         title: dto.title,
         description: dto.description,
         category: dto.category,
-        status: 'TODO',
+        status: dto.status ?? TaskStatus.OPEN,
         ownerId: userOwner.id,
         organizationId: userOwner.organizationId,
       });
@@ -110,9 +132,14 @@ describe('TasksService', () => {
 
       expect(auditLogService.logTaskAction).toHaveBeenCalledWith(
         userOwner,
-        expect.any(String), // AuditAction.TASK_CREATED
+        AuditAction.TASK_CREATED,
         createdTask.id,
-        expect.any(Object),
+        expect.objectContaining({
+          title: createdTask.title,
+          description: createdTask.description,
+          category: createdTask.category,
+          status: createdTask.status,
+        }),
       );
 
       expect(result).toBe(createdTask);
@@ -121,54 +148,41 @@ describe('TasksService', () => {
 
   describe('update', () => {
     it('should throw ForbiddenException for VIEWER', async () => {
-      const task: Task = {
-        id: 'task-1',
-        title: 'Old',
-        description: 'Old desc',
-        category: 'WORK',
-        status: 'TODO',
-        ownerId: userOwner.id,
-        organizationId: userOwner.organizationId,
-        owner: null,
-        organization: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+      const updateDto: UpdateTaskDto = {
+        title: 'New',
+        description: 'Some desc',
+        category: TaskCategory.CORE,
+        status: TaskStatus.OPEN,
       };
 
-      (taskRepo.findOne as jest.Mock).mockResolvedValue(task);
-
       await expect(
-        tasksService.update('task-1', { title: 'New' }, userViewer),
+        tasksService.update('task-1', updateDto, userViewer),
       ).rejects.toBeInstanceOf(ForbiddenException);
     });
 
     it('should throw NotFoundException when task does not exist', async () => {
+      (orgRepo.findOne as jest.Mock).mockResolvedValue({
+        id: userOwner.organizationId,
+        children: [],
+      });
+
       (taskRepo.findOne as jest.Mock).mockResolvedValue(null);
 
+      const updateDto: UpdateTaskDto = {
+        title: 'New',
+        description: 'Some desc',
+        category: TaskCategory.CORE,
+        status: TaskStatus.OPEN,
+      };
+
       await expect(
-        tasksService.update('unknown-id', { title: 'New' }, userOwner),
+        tasksService.update('unknown-id', updateDto, userOwner),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
   describe('delete', () => {
     it('should throw ForbiddenException for VIEWER', async () => {
-      const task: Task = {
-        id: 'task-1',
-        title: 'To delete',
-        description: 'Desc',
-        category: 'WORK',
-        status: 'TODO',
-        ownerId: userOwner.id,
-        organizationId: userOwner.organizationId,
-        owner: null,
-        organization: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      (taskRepo.findOne as jest.Mock).mockResolvedValue(task);
-
       await expect(
         tasksService.delete('task-1', userViewer),
       ).rejects.toBeInstanceOf(ForbiddenException);
@@ -179,8 +193,8 @@ describe('TasksService', () => {
         id: 'task-1',
         title: 'To delete',
         description: 'Desc',
-        category: 'WORK',
-        status: 'TODO',
+        category: TaskCategory.CORE,
+        status: TaskStatus.OPEN,
         ownerId: userOwner.id,
         organizationId: userOwner.organizationId,
         owner: null,
@@ -188,6 +202,11 @@ describe('TasksService', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
+
+      (orgRepo.findOne as jest.Mock).mockResolvedValue({
+        id: userOwner.organizationId,
+        children: [],
+      });
 
       (taskRepo.findOne as jest.Mock).mockResolvedValue(task);
 
@@ -197,9 +216,14 @@ describe('TasksService', () => {
 
       expect(auditLogService.logTaskAction).toHaveBeenCalledWith(
         userOwner,
-        expect.any(String), // AuditAction.TASK_DELETED
+        AuditAction.TASK_DELETED,
         task.id,
-        expect.any(Object),
+        expect.objectContaining({
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          category: task.category,
+        }),
       );
     });
   });

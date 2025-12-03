@@ -3,13 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
+export type TaskStatus = 'OPEN' | 'IN_PROGRESS' | 'CODE_REVIEW' | 'DONE';
+
+export type TaskCategory = 'CORE' | 'CUSTOM' | 'QA' | 'DEVOPS' | 'DATA';
 
 export interface Task {
   id: string;
   title: string;
   description?: string | null;
-  category: string;
+  category: TaskCategory;
   status: TaskStatus;
   ownerId: string;
   organizationId: string;
@@ -20,14 +22,14 @@ export interface Task {
 export interface CreateTaskDto {
   title: string;
   description?: string;
-  category: string;
+  category: TaskCategory;
   status?: TaskStatus;
 }
 
 export interface UpdateTaskDto {
   title?: string;
   description?: string;
-  category?: string;
+  category?: TaskCategory;
   status?: TaskStatus;
 }
 

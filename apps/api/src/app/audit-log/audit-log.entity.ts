@@ -20,16 +20,16 @@ export class AuditLog {
   organizationId: string;
 
   @Column({ length: 100 })
-  action: string; // por ejemplo: TASK_CREATED, TASK_UPDATED, TASK_DELETED
+  action: string;
 
   @Column({ length: 50 })
-  entity: string; // 'task'
+  entity: string;
 
   @Column({ type: 'uuid' })
   entityId: string;
 
   @Column({ type: 'text', nullable: true })
-  details?: string | null; // JSON string con info adicional opcional
+  details?: string | null;
 }
 
 // Para reutilizar acciones con type safety

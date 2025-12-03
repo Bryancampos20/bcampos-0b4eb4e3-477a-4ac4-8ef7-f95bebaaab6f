@@ -1,180 +1,282 @@
-<div class="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
+<div class="app-shell flex flex-col">
   <!-- Top bar -->
-  <header class="flex items-center justify-between px-8 py-4 border-b border-slate-800 bg-slate-950/80">
+  <header class="app-header">
     <div>
-      <h1 class="text-xl font-semibold">Task Management</h1>
-      <p class="text-xs text-slate-400 mt-1">
+      <h1 class="app-header-title">Task Management</h1>
+      <p class="app-header-subtitle">
         Logged in as
         <span class="font-medium">{{ currentUser?.email }}</span>
-        <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] uppercase bg-slate-800 text-slate-300">
+        <span class="ml-1 app-badge-muted uppercase">
           {{ currentUser?.role }}
         </span>
       </p>
     </div>
 
-    <button
-      (click)="logout()"
-      class="px-3 py-1.5 text-sm rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition"
-    >
-      Logout
-    </button>
+    <div class="flex items-center gap-3">
+      <button
+        *ngIf="!isViewer"
+        routerLink="/audit-log"
+        class="app-button-ghost"
+      >
+        View audit log
+      </button>
+
+      <button (click)="logout()" class="app-button-ghost">
+        Logout
+      </button>
+
+      <button
+        type="button"
+        (click)="toggleTheme()"
+        class="app-button-ghost text-xs"
+      >
+        <span class="mr-1" *ngIf="isDarkMode; else sun">🌙</span>
+        <ng-template #sun>☀️</ng-template>
+        {{ isDarkMode ? 'Dark' : 'Light' }}
+      </button>
+    </div>
   </header>
 
   <!-- Main content -->
   <div class="flex-1 flex flex-col lg:flex-row gap-6 p-6">
-    <!-- Tasks list -->
-    <section class="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
-      <div class="flex items-center justify-between mb  -4">
+    <!-- Task board (Kanban) -->
+    <section class="flex-1 app-card app-card-padding">
+      <div class="flex items-center justify-between mb-3">
         <h2 class="text-lg font-semibold">Tasks</h2>
-        <span class="text-xs text-slate-400">
+        <span class="text-xs text-slate-500 dark:text-slate-400">
           {{ tasks.length }} task{{ tasks.length === 1 ? '' : 's' }}
         </span>
       </div>
 
-      <div *ngIf="loading" class="text-sm text-slate-400 mt-4">
+      <!-- Toolbar: filter + sort -->
+      <div
+        class="flex flex-wrap items-center gap-3 mb-4 text-xs text-slate-600 dark:text-slate-300"
+      >
+        <div class="flex items-center gap-1">
+          <span>Category:</span>
+          <select
+            [(ngModel)]="categoryFilter"
+            name="categoryFilter"
+            class="app-select h-8 py-1 text-xs w-32"
+          >
+            <option [ngValue]="'ALL'">All</option>
+            <option *ngFor="let cat of categoryOptions" [ngValue]="cat.value">
+              {{ cat.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <span>Sort by:</span>
+          <select
+            [(ngModel)]="sortBy"
+            name="sortBy"
+            class="app-select h-8 py-1 text-xs w-40"
+          >
+            <option value="createdAt_desc">Newest first</option>
+            <option value="createdAt_asc">Oldest first</option>
+            <option value="title_asc">Title A–Z</option>
+          </select>
+        </div>
+      </div>
+
+      <div *ngIf="loading" class="text-sm text-slate-500 dark:text-slate-400">
         Loading tasks…
       </div>
 
-      <div *ngIf="error" class="text-sm text-red-400 mt-2">
+      <div *ngIf="error" class="text-sm text-red-500 mt-2">
         {{ error }}
       </div>
 
-      <div *ngIf="!loading && tasks.length === 0" class="text-sm text-slate-400 mt-4">
+      <div
+        *ngIf="!loading && tasks.length === 0"
+        class="text-sm text-slate-500 mt-4 dark:text-slate-400"
+      >
         No tasks yet. Use the form on the right to create one.
       </div>
 
-      <div class="mt-4 overflow-x-auto" *ngIf="tasks.length > 0">
-        <table class="min-w-full text-sm border-collapse">
-          <thead>
-            <tr class="border-b border-slate-800 text-slate-400">
-              <th class="text-left py-2 pr-4">Title</th>
-              <th class="text-left py-2 pr-4">Category</th>
-              <th class="text-left py-2 pr-4">Status</th>
-              <th class="text-left py-2 pr-4 hidden md:table-cell">Description</th>
-              <th class="text-right py-2 pl-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              *ngFor="let task of tasks"
-              class="border-b border-slate-800/60 hover:bg-slate-800/40 transition"
+      <!-- Board -->
+      <div
+        *ngIf="tasks.length > 0"
+        class="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"
+      >
+        <div
+          *ngFor="let col of statusOptions"
+          class="flex flex-col bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3"
+        >
+          <!-- Column header -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-semibold text-slate-700 dark:text-slate-100">
+                {{ col.label }}
+              </span>
+              <span class="app-badge-muted text-[10px]">
+                {{ tasksByStatus(col.value).length }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Drop area -->
+          <div
+            class="flex-1 rounded-lg border border-dashed border-slate-200 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-900/40 p-2 space-y-2 min-h-[120px]"
+            (dragover)="onDragOver($event)"
+            (drop)="onDrop($event, col.value)"
+          >
+            <p
+              *ngIf="tasksByStatus(col.value).length === 0"
+              class="text-[11px] text-slate-400 italic"
             >
-              <td class="py-2 pr-4 align-top">
-                <div class="font-medium">{{ task.title }}</div>
-              </td>
-              <td class="py-2 pr-4 align-top">
-                <span class="px-2 py-0.5 rounded-full bg-slate-800 text-[11px]">
+              Drop tasks here to set them as {{ col.label.toLowerCase() }}.
+            </p>
+
+            <!-- Task cards -->
+            <article
+              *ngFor="let task of tasksByStatus(col.value)"
+              class="rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 shadow-sm cursor-move"
+              [attr.draggable]="canModifyTasks ? true : null"
+              (dragstart)="onDragStart(task)"
+            >
+              <div class="flex items-start justify-between gap-2">
+                <!-- Título + descripción -->
+                <div class="flex-1 min-w-0">
+                  <h3
+                    class="text-sm font-semibold text-slate-800 dark:text-slate-100 app-ellipsis"
+                  >
+                    {{ task.title }}
+                  </h3>
+                  <p
+                    *ngIf="task.description"
+                    class="mt-1 text-xs text-slate-600 dark:text-slate-300 app-ellipsis"
+                  >
+                    {{ task.description || '—' }}
+                  </p>
+                </div>
+
+                <!-- Badge de categoría -->
+                <span class="app-badge text-[10px] flex-shrink-0">
                   {{ task.category }}
                 </span>
-              </td>
-              <td class="py-2 pr-4 align-top">
+              </div>
+
+              <div class="mt-2 flex items-center justify-between">
                 <span
-                  class="px-2 py-0.5 rounded-full text-[11px]"
+                  class="app-badge text-[10px]"
                   [ngClass]="{
-                    'bg-sky-800 text-sky-100': task.status === 'TODO',
-                    'bg-amber-700 text-amber-50': task.status === 'IN_PROGRESS',
-                    'bg-emerald-700 text-emerald-50': task.status === 'DONE'
+                    'bg-sky-100 text-sky-700 dark:bg-sky-800 dark:text-sky-100':
+                      task.status === 'OPEN',
+                    'bg-amber-100 text-amber-800 dark:bg-amber-700 dark:text-amber-50':
+                      task.status === 'IN_PROGRESS',
+                    'bg-violet-100 text-violet-800 dark:bg-violet-700 dark:text-violet-50':
+                      task.status === 'CODE_REVIEW',
+                    'bg-emerald-100 text-emerald-800 dark:bg-emerald-700 dark:text-emerald-50':
+                      task.status === 'DONE'
                   }"
                 >
                   {{ task.status }}
                 </span>
-              </td>
-              <td class="py-2 pr-4 align-top hidden md:table-cell">
-                <span class="text-slate-300 text-xs">
-                  {{ task.description || '—' }}
-                </span>
-              </td>
-              <td class="py-2 pl-4 align-top text-right">
-                <ng-container *ngIf="canModifyTasks; else viewerActions">
+
+                <div *ngIf="canModifyTasks; else viewerActions" class="flex gap-2">
                   <button
-                    class="text-xs px-2 py-1 rounded-lg border border-slate-700 hover:bg-slate-800 mr-2"
+                    type="button"
+                    class="app-button-ghost text-[11px] px-2 py-1"
                     (click)="startEdit(task)"
                   >
                     Edit
                   </button>
                   <button
-                    class="text-xs px-2 py-1 rounded-lg border border-red-700 text-red-300 hover:bg-red-800/60"
+                    type="button"
+                    class="app-button-danger text-[11px] px-2 py-1"
                     (click)="deleteTask(task)"
                   >
                     Delete
                   </button>
-                </ng-container>
+                </div>
+
                 <ng-template #viewerActions>
-                  <span class="text-[11px] text-slate-500 italic">
+                  <span class="text-[10px] text-slate-400 italic">
                     Read-only
                   </span>
                 </ng-template>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </article>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- Form -->
-    <section class="w-full lg:w-80 bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
+    <section class="w-full lg:w-80 app-card app-card-padding">
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-lg font-semibold">
           {{ editingTaskId ? 'Edit task' : 'Create task' }}
         </h2>
       </div>
 
-      <div *ngIf="isViewer" class="text-xs text-slate-400 mb-2">
-        You are signed in as <span class="font-medium">VIEWER</span>. Task creation
-        and modifications are disabled.
+      <div *ngIf="isViewer" class="text-xs text-slate-500 mb-2">
+        You are signed in as <span class="font-medium">VIEWER</span>. Task
+        creation and modifications are disabled.
       </div>
 
-      <form (ngSubmit)="submitForm()" class="space-y-3" [class.opacity-60]="!canModifyTasks">
+      <form
+        (ngSubmit)="submitForm()"
+        class="space-y-3"
+        [class.opacity-60]="!canModifyTasks"
+      >
         <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">Title</label>
+          <label class="app-label">Title</label>
           <input
             type="text"
             [(ngModel)]="formTitle"
             name="title"
             [disabled]="!canModifyTasks"
-            class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            class="app-input"
             placeholder="Short task title"
             required
           />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">Description</label>
+          <label class="app-label">Description</label>
           <textarea
             [(ngModel)]="formDescription"
             name="description"
             [disabled]="!canModifyTasks"
             rows="3"
-            class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none"
+            class="app-textarea"
             placeholder="Optional description"
           ></textarea>
         </div>
 
         <div class="flex gap-2">
           <div class="flex-1">
-            <label class="block text-xs font-medium text-slate-300 mb-1">Category</label>
-            <input
-              type="text"
+            <label class="app-label">Category</label>
+            <select
               [(ngModel)]="formCategory"
               name="category"
               [disabled]="!canModifyTasks"
-              class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              placeholder="e.g. WORK, HOME"
+              class="app-select"
               required
-            />
+            >
+              <option
+                *ngFor="let cat of categoryOptions"
+                [ngValue]="cat.value"
+              >
+                {{ cat.label }}
+              </option>
+            </select>
           </div>
 
-          <div class="w-32">
-            <label class="block text-xs font-medium text-slate-300 mb-1">Status</label>
+          <div class="w-40">
+            <label class="app-label">Status</label>
             <select
               [(ngModel)]="formStatus"
               name="status"
               [disabled]="!canModifyTasks"
-              class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+              class="app-select"
             >
-              <option value="TODO">TODO</option>
-              <option value="IN_PROGRESS">IN_PROGRESS</option>
-              <option value="DONE">DONE</option>
+              <option *ngFor="let s of statusOptions" [ngValue]="s.value">
+                {{ s.label }}
+              </option>
             </select>
           </div>
         </div>
@@ -183,7 +285,7 @@
           <button
             type="submit"
             [disabled]="!canModifyTasks"
-            class="flex-1 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed transition"
+            class="app-button-primary flex-1"
           >
             {{ editingTaskId ? 'Save changes' : 'Create task' }}
           </button>
@@ -191,9 +293,9 @@
           <button
             type="button"
             (click)="resetForm()"
-            class="px-3 py-2 rounded-lg border border-slate-700 text-sm text-slate-200 hover:bg-slate-800/70 transition"
+            class="app-button-ghost"
           >
-            Clear
+            Cancel
           </button>
         </div>
       </form>

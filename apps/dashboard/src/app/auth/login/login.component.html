@@ -1,62 +1,69 @@
-<div class="min-h-screen flex items-center justify-center bg-slate-900">
-  <div class="w-full max-w-md bg-slate-800 rounded-xl shadow-xl p-8 border border-slate-700">
-    <h1 class="text-2xl font-semibold text-white text-center mb-2">
-      Task Management
-    </h1>
-    <p class="text-sm text-slate-300 text-center mb-6">
-      Sign in with your provided credentials
-    </p>
+<div class="app-shell app-shell-centered relative">
+  <!-- Toggle Theme -->
+  <button
+    type="button"
+    (click)="toggleTheme()"
+    class="absolute top-4 right-4 app-button-ghost text-xs"
+  >
+    <span class="mr-1" *ngIf="isDarkMode; else lightIcon">🌙</span>
+    <ng-template #lightIcon>☀️</ng-template>
+    {{ isDarkMode ? 'Dark' : 'Light' }}
+  </button>
 
-    <form (ngSubmit)="submit()" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-slate-200 mb-1">
-          Email
-        </label>
-        <input
-          type="email"
-          [(ngModel)]="email"
-          name="email"
-          required
-          class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-          placeholder="owner@example.com"
-        />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-slate-200 mb-1">
-          Password
-        </label>
-        <input
-          type="password"
-          [(ngModel)]="password"
-          name="password"
-          required
-          class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-          placeholder="••••••••"
-        />
-      </div>
-
-      <button
-        type="submit"
-        [disabled]="isSubmitting"
-        class="w-full py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm transition"
-      >
-        {{ isSubmitting ? 'Signing in…' : 'Sign in' }}
-      </button>
-
-      <p
-        *ngIf="error"
-        class="text-sm text-red-400 text-center mt-2"
-      >
-        {{ error }}
+  <div class="w-full max-w-md">
+    <!-- Logo / Title -->
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-semibold text-slate-900 dark:text-white">
+        Task Management
+      </h1>
+      <p class="text-sm text-slate-500 mt-1 dark:text-slate-300">
+        Sign in with your provided credentials.
       </p>
-    </form>
-
-    <div class="mt-6 text-xs text-slate-400 text-center">
-      <p class="mb-1">Seed users for testing:</p>
-      <p>owner@example.com / password123</p>
-      <p>admin@example.com / password123</p>
-      <p>viewer@example.com / password123</p>
     </div>
+
+    <!-- Card -->
+    <div class="app-card app-card-padding space-y-5">
+      <form (ngSubmit)="submit()" class="space-y-4">
+        <div>
+          <label class="app-label">Email</label>
+          <input
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            required
+            class="app-input"
+            placeholder="owner@example.com"
+          />
+        </div>
+
+        <div>
+          <label class="app-label">Password</label>
+          <input
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            required
+            class="app-input"
+            placeholder="••••••••"
+          />
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="isSubmitting"
+          class="app-button-primary w-full"
+        >
+          {{ isSubmitting ? 'Signing in…' : 'Sign in' }}
+        </button>
+
+        <p *ngIf="error" class="text-sm text-red-500 text-center mt-1">
+          {{ error }}
+        </p>
+      </form>
+    </div>
+
+    <p class="mt-4 text-[11px] text-slate-500 text-center dark:text-slate-500">
+      Demo project – TurboVets Task Management Challenge
+    </p>
   </div>
 </div>

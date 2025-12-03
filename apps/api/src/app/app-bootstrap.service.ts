@@ -17,45 +17,112 @@ export class AppBootstrapService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
-    // 1) Organización por defecto
-    let org = await this.orgRepo.findOne({ where: { id: 'org-1' } });
+    this.logger.log('📌 Starting database seed...');
 
-    if (!org) {
-      org = this.orgRepo.create({
-        id: 'org-1',
-        name: 'Default Org',
+    // 1) ORGANIZACIÓN PADRE
+    let orgFather = await this.orgRepo.findOne({
+      where: { id: 'org-father' },
+    });
+
+    if (!orgFather) {
+      orgFather = this.orgRepo.create({
+        id: 'org-father',
+        name: 'Organization Father',
         parentId: null,
       });
-
-      await this.orgRepo.save(org);
-      this.logger.log('Seeded default organization org-1');
+      await this.orgRepo.save(orgFather);
+      this.logger.log('Seeded organization: org-father');
     }
 
-    // 2) Usuarios por defecto (con mismos IDs que usamos en AuthService)
-    const seedUsers: { id: string; email: string; role: Role }[] = [
-      { id: 'user-owner-1', email: 'owner@example.com', role: Role.OWNER },
-      { id: 'user-admin-1', email: 'admin@example.com', role: Role.ADMIN },
-      { id: 'user-viewer-1', email: 'viewer@example.com', role: Role.VIEWER },
-    ];
+    // 2) ORGANIZACIÓN HIJA
+    let orgChild = await this.orgRepo.findOne({
+      where: { id: 'org-child' },
+    });
 
-    for (const u of seedUsers) {
-      let user = await this.userRepo.findOne({ where: { id: u.id } });
+    if (!orgChild) {
+      orgChild = this.orgRepo.create({
+        id: 'org-child',
+        name: 'Organization Child',
+        parentId: 'org-father',
+      });
+      await this.orgRepo.save(orgChild);
+      this.logger.log('Seeded organization: org-child');
+    }
+
+    // Helper para seed de usuarios
+    const createUser = async (
+      id: string,
+      email: string,
+      role: Role,
+      orgId: string,
+      org: Organization,
+    ) => {
+      let user = await this.userRepo.findOne({ where: { id } });
 
       if (!user) {
         user = this.userRepo.create({
-          id: u.id,
-          email: u.email,
-          role: u.role,
-          // ⚠️ Para el challenge: usamos texto plano
-          // En producción debería ser un hash (bcrypt, etc.)
+          id,
+          email,
+          role,
           passwordHash: 'password123',
-          organizationId: org.id,
+          organizationId: orgId,
           organization: org,
         });
-
         await this.userRepo.save(user);
-        this.logger.log(`Seeded user ${u.email}`);
+        this.logger.log(`Seeded user: ${email}`);
       }
-    }
+    };
+
+    // 3) USUARIOS DE ORG-FATHER
+    await createUser(
+      'user-owner-father',
+      'owner-father@example.com',
+      Role.OWNER,
+      orgFather.id,
+      orgFather
+    );
+
+    await createUser(
+      'user-admin-father',
+      'admin-father@example.com',
+      Role.ADMIN,
+      orgFather.id,
+      orgFather
+    );
+
+    await createUser(
+      'user-viewer-father',
+      'viewer-father@example.com',
+      Role.VIEWER,
+      orgFather.id,
+      orgFather
+    );
+
+    // 4) USUARIOS DE ORG-CHILD
+    await createUser(
+      'user-owner-child',
+      'owner-child@example.com',
+      Role.OWNER,
+      orgChild.id,
+      orgChild
+    );
+
+    await createUser(
+      'user-admin-child',
+      'admin-child@example.com',
+      Role.ADMIN,
+      orgChild.id,
+      orgChild
+    );
+
+    await createUser(
+      'user-viewer-child',
+      'viewer-child@example.com',
+      Role.VIEWER,
+      orgChild.id,
+      orgChild
+    );
+
+    this.logger.log('✅ Database seed completed.');
   }
 }
