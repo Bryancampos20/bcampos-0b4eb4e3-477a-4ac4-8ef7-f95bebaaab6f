@@ -78,6 +78,58 @@
             <option value="title_asc">Title A–Z</option>
           </select>
         </div>
+
+        <!-- Toggle button for completion overview -->
+        <button
+          type="button"
+          class="app-button-ghost h-8 px-3"
+          [disabled]="totalTasks === 0"
+          (click)="toggleOverview()"
+        >
+          {{ showOverview ? 'Hide completion overview' : 'Show completion overview' }}
+        </button>
+      </div>
+
+      <!-- Task completion visualization (simple horizontal bar chart) -->
+      <div
+        *ngIf="totalTasks > 0 && showOverview"
+        class="mb-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-900/80 p-3 text-xs"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-semibold text-slate-800 dark:text-slate-100 text-sm">
+            Task completion overview
+          </span>
+          <span class="text-slate-500 dark:text-slate-400">
+            {{ statusCounts['DONE'] || 0 }} of {{ totalTasks }} completed
+            ({{ getStatusPercent('DONE') }}%)
+          </span>
+        </div>
+
+        <div class="space-y-2">
+          <div *ngFor="let s of statusOptions">
+            <div class="flex justify-between mb-1">
+              <span class="text-slate-700 dark:text-slate-200">
+                {{ s.label }}
+              </span>
+              <span class="text-slate-500 dark:text-slate-400">
+                {{ statusCounts[s.value] || 0 }} ·
+                {{ getStatusPercent(s.value) }}%
+              </span>
+            </div>
+            <div class="h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+              <div
+                class="h-full transition-all"
+                [style.width]="getStatusPercent(s.value) + '%'"
+                [ngClass]="{
+                  'bg-sky-500': s.value === 'OPEN',
+                  'bg-amber-500': s.value === 'IN_PROGRESS',
+                  'bg-violet-500': s.value === 'CODE_REVIEW',
+                  'bg-emerald-500': s.value === 'DONE'
+                }"
+              ></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div *ngIf="loading" class="text-sm text-slate-500 dark:text-slate-400">

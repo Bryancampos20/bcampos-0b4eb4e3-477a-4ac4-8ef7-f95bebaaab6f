@@ -56,6 +56,19 @@ export class TasksShellComponent implements OnInit {
     { value: 'DONE', label: 'Done' },
   ];
 
+  /**
+   * Map to keep track of counts per status (for the completion visualization).
+   * We use Partial<...> so that if TaskStatus grows in the future, we don't
+   * have to define all keys upfront. Missing keys are treated as 0.
+   */
+  statusCounts: Partial<Record<TaskStatus, number>> = {};
+
+  /**
+   * Controls whether the completion overview panel is visible.
+   * Hidden by default; toggled via a button in the UI.
+   */
+  showOverview = false;
+
   // Local reference to the task being dragged (for simple HTML5 drag & drop)
   private draggedTask: Task | null = null;
 
@@ -93,6 +106,13 @@ export class TasksShellComponent implements OnInit {
     );
   }
 
+  /**
+   * Total number of tasks currently loaded (used by the visualization and header).
+   */
+  get totalTasks(): number {
+    return this.tasks.length;
+  }
+
   // Theme toggling
 
   /**
@@ -110,12 +130,13 @@ export class TasksShellComponent implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
-  // Task helpers (CRUD + filtering/sorting)
+  // Task helpers (CRUD + filtering/sorting + metrics)
   // ---------------------------------------------------------------------------
 
   /**
    * Loads tasks from the backend and updates local state.
    * Handles loading and error states for a better UX.
+   * Also recomputes status counts for the completion visualization.
    */
   loadTasks() {
     this.loading = true;
@@ -125,6 +146,7 @@ export class TasksShellComponent implements OnInit {
       next: (tasks: Task[]) => {
         this.tasks = tasks;
         this.loading = false;
+        this.recomputeStatusCounts();
       },
       error: (err: unknown) => {
         console.error('Error loading tasks', err);
@@ -132,6 +154,21 @@ export class TasksShellComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  /**
+   * Recomputes the number of tasks per status (OPEN, IN_PROGRESS, CODE_REVIEW, DONE).
+   * This is used by the task completion visualization (bar chart).
+   */
+  private recomputeStatusCounts(): void {
+    const counts: Partial<Record<TaskStatus, number>> = {};
+
+    for (const task of this.tasks) {
+      const current = counts[task.status] ?? 0;
+      counts[task.status] = current + 1;
+    }
+
+    this.statusCounts = counts;
   }
 
   /**
@@ -169,6 +206,23 @@ export class TasksShellComponent implements OnInit {
     }
 
     return this.sortTasks(list);
+  }
+
+  /**
+   * Returns the percentage (0–100) of tasks in the given status,
+   * based on all tasks currently loaded (not filtered by category).
+   */
+  getStatusPercent(status: TaskStatus): number {
+    if (!this.totalTasks) return 0;
+    const count = this.statusCounts[status] ?? 0;
+    return Math.round((count / this.totalTasks) * 100);
+  }
+
+  /**
+   * Toggles the visibility of the completion overview panel.
+   */
+  toggleOverview(): void {
+    this.showOverview = !this.showOverview;
   }
 
   /**
@@ -287,6 +341,7 @@ export class TasksShellComponent implements OnInit {
   /**
    * Handles dropping a task into a new status column.
    * Uses an optimistic UI update and reverts on error.
+   * Also recomputes status counts so the visualization stays in sync.
    */
   onDrop(event: DragEvent, targetStatus: TaskStatus) {
     if (!this.canModifyTasks) return;
@@ -304,6 +359,7 @@ export class TasksShellComponent implements OnInit {
 
     // Optimistic update: update column in the UI immediately
     task.status = targetStatus;
+    this.recomputeStatusCounts();
 
     this.tasksService.updateTask(task.id, { status: targetStatus }).subscribe({
       next: () => {
@@ -312,8 +368,9 @@ export class TasksShellComponent implements OnInit {
       error: (err: unknown) => {
         console.error('Error moving task', err);
         this.error = 'Failed to move task.';
-        // Revert status change on failure
+        // Revert status change on failure and recompute counts
         task.status = previousStatus;
+        this.recomputeStatusCounts();
       },
     });
   }
