@@ -1,7 +1,6 @@
 ## 🚀 TurboVets – Full Stack Task Management System
 
 This project was built following all the requirements of the Full-Stack Coding Challenge, with a strong focus on architecture, modularity, security, RBAC, and clear separation of concerns.
-Below is a detailed description of how each requirement is implemented and where it can be found in the codebase.
 
 ## 🛠 Setup Instructions
 
@@ -109,16 +108,18 @@ apps/dashboard/src/app
 └── core/               → Theme service, interceptor
 ```
 
-## Data Model Explanation
+## 🧩 Data Model Explanation
 
 The system revolves around Organizations, Users, and Tasks, all isolated by hierarchical org structure.
 
 ### Entity Relationship Diagram (ERD)
 
-Organization (parent-child) 1 --- N Users
-Organization 1 --- N Tasks
-User 1 --- N Tasks (owner)
-User 1 --- N AuditLog entries
+| Entity       | Relationship | Entity       | Notes                            |
+|------------- |------------- |--------------|----------------------------------|
+| Organization | 1 ─── N      | Users        | Parent-child hierarchy supported |
+| Organization | 1 ─── N      | Tasks        | Belongs to org                   |
+| User         | 1 ─── N      | Tasks        | Task owner                       |
+| User         | 1 ─── N      | AuditLog     | Logs who performed actions       |
 
 
 #### Organization
@@ -164,7 +165,7 @@ User 1 --- N AuditLog entries
 | organizationId  | Inherited from task                                     |
 
 
-## Access Control Implementation (RBAC)
+## 👮‍♂️ Access Control Implementation (RBAC)
 
 The system uses role-driven permissions AND organization-scoped access.
 
@@ -178,9 +179,11 @@ The system uses role-driven permissions AND organization-scoped access.
 
 ### Organization Hierarchy
 
+```bash
 Corp (OWNER)
  ├── Division A (ADMIN, VIEWER users)
  └── Division B
+```
 
 OWNER can see/manage tasks across the entire hierarchy.
 
@@ -202,13 +205,15 @@ All protected routes require:
 
 When logging in, the backend returns:
 
+```bash
 {
   "accessToken": "<jwt>"
 }
-
+```
 
 The JWT payload contains:
 
+```bash
 {
   "sub": "user-id",
   "email": "owner@example.com",
@@ -216,6 +221,7 @@ The JWT payload contains:
   "organizationId": "org-123",
   "exp": 1710000000
 }
+```
 
 The Angular interceptor attaches:
 
@@ -241,16 +247,20 @@ POST /auth/login
 
 Body
 
+```bash
 {
   "email": "owner@example.com",
   "password": "owner123"
 }
+```
 
 Response
 
+```bash
 {
   "accessToken": "<jwt>"
 }
+```
 
 ### Tasks API
 
@@ -260,12 +270,14 @@ Returns all tasks visible to the user’s organization scope.
 
 POST /tasks
 
+```bash
 {
   "title": "Implement RBAC",
   "description": "Test hierarchy",
   "category": "CORE",
   "status": "OPEN"
 }
+```
 
 PUT /tasks/:id
 
