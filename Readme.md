@@ -284,7 +284,7 @@ Response
 }
 ```
 
-### Tasks API
+## 🗂️ Tasks API
 
 **GET** `/tasks`
 
