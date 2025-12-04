@@ -1,9 +1,9 @@
-## TurboVets – Full Stack Task Management System
+## 🚀 TurboVets – Full Stack Task Management System
 
 This project was built following all the requirements of the Full-Stack Coding Challenge, with a strong focus on architecture, modularity, security, RBAC, and clear separation of concerns.
 Below is a detailed description of how each requirement is implemented and where it can be found in the codebase.
 
-## Setup Instructions
+## 🛠 Setup Instructions
 
 ### Install dependencies
 
@@ -50,7 +50,7 @@ http://localhost:4200
 
 ```
 
-### Run Tests
+### 🧪 Run Tests
 
 Backend:
 ```bash
