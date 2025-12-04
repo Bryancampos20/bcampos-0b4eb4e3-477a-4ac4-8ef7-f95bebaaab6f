@@ -70,6 +70,23 @@ npm run test:all
 
 ```
 
+## 👥 Test Users & Roles
+
+These accounts are pre-configured for testing **RBAC + Organization Hierarchy**:
+
+| Email | Role | Organization | Password |
+|-------|------|---------------|----------|
+| owner-father@example.com | **OWNER** | Father Org | `password123` |
+| admin-father@example.com | **ADMIN** | Father Org | `password123` |
+| viewer-father@example.com | **VIEWER** | Father Org | `password123` |
+| owner-child@example.com | **OWNER** | Child Org | `password123` |
+| admin-child@example.com | **ADMIN** | Child Org | `password123` |
+| viewer-child@example.com | **VIEWER** | Child Org | `password123` |
+
+> 📌 Father organization roles may have visibility over Child organization tasks depending on RBAC rules implemented.
+
+
+
 ## 🏗 Architecture Overview 
 
 Nx Monorepo Architecture
@@ -177,7 +194,7 @@ The system uses role-driven permissions AND organization-scoped access.
 | ADMIN           | Manage tasks, view audit logs                                  |
 | VIEWER          | Read-only access, cannot modify tasks, cannot access audit log |
 
-### Organization Hierarchy
+### 🏢 Organization Hierarchy
 
 ```bash
 Corp (OWNER)
@@ -234,7 +251,7 @@ The frontend also mirrors RBAC:
 - Task form becomes disabled.
 
 
-## API Documentation
+## 📚 API Documentation
 
 **Base URL** 
 
@@ -302,12 +319,3 @@ Removes task + logs deletion.
 - HTTP-only cookies
 - CSRF protection
 - Protect login routes.
-
-owner@example.com
- (OWNER)
-
-admin@example.com
- (ADMIN)
-
-viewer@example.com
- (VIEWER)
