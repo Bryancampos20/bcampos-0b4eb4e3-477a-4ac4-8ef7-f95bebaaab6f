@@ -6,7 +6,12 @@
     "prestart:dashboard": "node tools/scripts/set-env.js",
     "start:dashboard": "nx serve dashboard",
     "start:api": "nx serve api",
-    "test:api": "nx test api"
+
+    "test:api": "nx test api",
+    "test:dashboard": "nx test dashboard",
+
+    "test:all": "nx run-many --target=test --projects=api,dashboard --parallel",
+    "start:test": "npm run test:all"
   },
   "private": true,
   "devDependencies": {
