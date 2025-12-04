@@ -1,8 +1,3 @@
-npm install
-npm run start:api
-npm run start:dashboard
-
-
 ## TurboVets – Full Stack Task Management System
 
 This project was built following all the requirements of the Full-Stack Coding Challenge, with a strong focus on architecture, modularity, security, RBAC, and clear separation of concerns.
