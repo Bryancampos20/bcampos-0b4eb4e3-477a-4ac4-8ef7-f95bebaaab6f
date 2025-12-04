@@ -236,14 +236,15 @@ The frontend also mirrors RBAC:
 
 ## API Documentation
 
-Base URL:
+**Base URL** 
 
+```bash
 /api
-
+```
 
 ### Auth
 
-POST /auth/login
+**POST** `/auth/login`
 
 Body
 
