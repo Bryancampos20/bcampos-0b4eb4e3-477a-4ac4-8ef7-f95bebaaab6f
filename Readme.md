@@ -71,19 +71,21 @@ npm run test:all
 
 ```
 
-## Architecture Overview 
+## 🏗 Architecture Overview 
 
 Nx Monorepo Architecture
 
 The project follows an Nx monorepo structure:
 
-apps/
-  api/           → NestJS backend
-  dashboard/     → Angular web client
+.
+├── apps/
+│   ├── api/          # NestJS backend
+│   └── dashboard/    # Angular web client
+│
+└── libs/
+    ├── auth/         # Reusable authentication layer (guards, decorators)
+    └── data/         # Shared models, enums, and types
 
-libs/
-  auth/          → Reusable authentication layer (guards, decorators)
-  data/          → Shared models, enums, and types
 
 
 ### Backend Architecture
