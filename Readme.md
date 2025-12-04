@@ -202,9 +202,9 @@ Corp (OWNER)
  └── Division B
 ```
 
-OWNER can see/manage tasks across the entire hierarchy.
+**OWNER:** can see/manage tasks across the entire hierarchy.
 
-ADMIN/VIEWER are scoped only within their own org.
+**ADMIN/VIEWER:** are scoped only within their own org.
 
 ### Backend Enforcement
 
@@ -216,7 +216,9 @@ NestJS Guards:
 
 All protected routes require:
 
+```bash
 @UseGuards(JwtAuthGuard, RolesGuard, OrgScopeGuard)
+```
 
 ### JWT Integration
 
@@ -242,7 +244,9 @@ The JWT payload contains:
 
 The Angular interceptor attaches:
 
+```bash
 Authorization: Bearer <token>
+```
 
 The frontend also mirrors RBAC:
 
