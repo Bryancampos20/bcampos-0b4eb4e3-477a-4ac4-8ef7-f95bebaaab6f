@@ -264,11 +264,11 @@ Response
 
 ### Tasks API
 
-GET /tasks
+**GET** `/tasks`
 
 Returns all tasks visible to the user’s organization scope.
 
-POST /tasks
+**POST** `/tasks`
 
 ```bash
 {
@@ -279,45 +279,28 @@ POST /tasks
 }
 ```
 
-PUT /tasks/:id
+**PUT** `/tasks/:id`
 
 Updates one or more fields. Automatically records an audit before/after diff.
 
-DELETE /tasks/:id
+**DELETE** `/tasks/:id`
 
 Removes task + logs deletion.
 
 
-Future Considerations
+## 🔮 Future Considerations
+
 🔹 Advanced Role Delegation
 
-Multi-role users
-
-Temporary delegated permissions
-
-Role-scoped audit visibility
+- Multi-role users
+- Temporary delegated permissions
+- Role-scoped audit visibility
 
 🔹 Production-grade Security
 
-
-HTTP-only cookies
-
-Prevent XSS token theft.
-
-CSRF protection
-
-For same-site deployments.
-
-Protect login routes.
-
-🔹 Scaling Permission Checks
-
-Permission caching in Redis
-
-Pre-computed org hierarchy via adjacency lists
-
-Database-level row-level policies (RLS)
-
+- HTTP-only cookies
+- CSRF protection
+- Protect login routes.
 
 owner@example.com
  (OWNER)
