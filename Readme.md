@@ -77,6 +77,7 @@ Nx Monorepo Architecture
 
 The project follows an Nx monorepo structure:
 
+```bash
 .
 ├── apps/
 │   ├── api/          # NestJS backend
@@ -85,28 +86,28 @@ The project follows an Nx monorepo structure:
 └── libs/
     ├── auth/         # Reusable authentication layer (guards, decorators)
     └── data/         # Shared models, enums, and types
-
-
+```
 
 ### Backend Architecture
 
+```bash
 apps/api/src/app
 ├── auth/               → JWT login, guards, strategies
 ├── users/              → Bootstrapped system users
 ├── organizations/      → Parent/child hierarchy
 ├── tasks/              → CRUD + audit events
 └── audit-log/          → Task update history
-
+```
 
 ### Frontend Architecture
 
+```bash
 apps/dashboard/src/app
 ├── auth/               → Login flow, JWT decoding, AuthGuard
 ├── tasks/              → Kanban board, drag-and-drop
 ├── audit-log/          → Organization-wide history
 └── core/               → Theme service, interceptor
-
-
+```
 
 ## Data Model Explanation
 
