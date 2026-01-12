@@ -34,30 +34,20 @@ export class AuditLogService {
    * for organizations they do not belong to.
    */
   private async getAllowedOrganizationIds(user: AuthUser): Promise<string[]> {
-    // Admins and viewers are limited strictly to their own organization
-    if (user.role !== Role.OWNER) {
-      return [user.organizationId];
-    }
-
-    // Owners may have visibility into their organization and its direct children
     const org = await this.orgRepo.findOne({
       where: { id: user.organizationId },
       relations: ['children'],
     });
 
-    // Fallback: if for any reason the org cannot be resolved, restrict to user's org
-    if (!org) {
-      return [user.organizationId];
-    }
+    if (!org) return [user.organizationId];
 
-    const ids = [org.id];
-
-    // If the owner belongs to a parent org, include child orgs as well
+    // If this org has children, it's a parent org → scope includes children too
     if (org.children && org.children.length > 0) {
-      ids.push(...org.children.map((child) => child.id));
+      return [org.id, ...org.children.map((child) => child.id)];
     }
 
-    return ids;
+    // Otherwise, child org (or no children) → scope is just itself
+    return [org.id];
   }
 
   /**
