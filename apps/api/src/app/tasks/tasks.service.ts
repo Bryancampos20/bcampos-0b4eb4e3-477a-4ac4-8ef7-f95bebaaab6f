@@ -38,30 +38,21 @@ export class TasksService {
    * This ensures multi-tenant isolation and prevents cross-organization reads.
    */
   private async getAllowedOrganizationIds(user: AuthUser): Promise<string[]> {
-    // ADMIN and VIEWER roles are restricted to their single organization
-    if (user.role !== Role.OWNER) {
-      return [user.organizationId];
-    }
-
-    // OWNER may have access to a parent org and its children
     const org = await this.orgRepo.findOne({
       where: { id: user.organizationId },
       relations: ['children'],
     });
 
-    // Fallback: if org does not exist, restrict scope to user org
-    if (!org) {
-      return [user.organizationId];
-    }
+    if (!org) return [user.organizationId];
 
-    const ids = [org.id];
-
-    // Include child organizations if present
+    // If the org has children, the user belongs to a parent org.
+    // Parent org users can access parent + direct children (visibility scope).
     if (org.children && org.children.length > 0) {
-      ids.push(...org.children.map((child) => child.id));
+      return [org.id, ...org.children.map((c) => c.id)];
     }
 
-    return ids;
+    // Child org (or org with no children) -> only itself
+    return [org.id];
   }
 
   /**
